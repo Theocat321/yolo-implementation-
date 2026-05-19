@@ -48,3 +48,48 @@ def draw_detections(
             2,
         )
     return frame
+
+
+def main() -> None:
+    model = YOLO("yolo11n.pt")
+    cap = cv2.VideoCapture(WEBCAM_INDEX)
+
+    if not cap.isOpened():
+        raise RuntimeError(f"Cannot open webcam at index {WEBCAM_INDEX}")
+
+    prev_time = time.time()
+
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            print("Failed to read frame — exiting.")
+            break
+
+        results = model(frame, verbose=False)
+
+        boxes = results[0].boxes
+        if boxes is not None and len(boxes):
+            draw_detections(
+                frame,
+                boxes.xyxy.cpu().numpy(),
+                boxes.cls.cpu().numpy(),
+                boxes.conf.cpu().numpy(),
+                model.names,
+                CONFIDENCE_THRESHOLD,
+            )
+
+        curr_time = time.time()
+        fps = 1.0 / (curr_time - prev_time)
+        prev_time = curr_time
+        draw_fps(frame, fps)
+
+        cv2.imshow("YOLOv11 Detection", frame)
+        if cv2.waitKey(1) & 0xFF == ord("q"):
+            break
+
+    cap.release()
+    cv2.destroyAllWindows()
+
+
+if __name__ == "__main__":
+    main()
