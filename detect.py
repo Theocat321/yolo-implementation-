@@ -59,36 +59,38 @@ def main() -> None:
 
     prev_time = time.time()
 
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            print("Failed to read frame — exiting.")
-            break
+    try:
+        while True:
+            ret, frame = cap.read()
+            if not ret:
+                print("Failed to read frame — exiting.")
+                break
 
-        results = model(frame, verbose=False)
+            results = model(frame, verbose=False)
 
-        boxes = results[0].boxes
-        if boxes is not None and len(boxes):
-            draw_detections(
-                frame,
-                boxes.xyxy.cpu().numpy(),
-                boxes.cls.cpu().numpy(),
-                boxes.conf.cpu().numpy(),
-                model.names,
-                CONFIDENCE_THRESHOLD,
-            )
+            boxes = results[0].boxes
+            if boxes is not None and len(boxes):
+                draw_detections(
+                    frame,
+                    boxes.xyxy.cpu().numpy(),
+                    boxes.cls.cpu().numpy(),
+                    boxes.conf.cpu().numpy(),
+                    model.names,
+                    CONFIDENCE_THRESHOLD,
+                )
 
-        curr_time = time.time()
-        fps = 1.0 / (curr_time - prev_time)
-        prev_time = curr_time
-        draw_fps(frame, fps)
+            curr_time = time.time()
+            elapsed = curr_time - prev_time
+            fps = 1.0 / elapsed if elapsed > 0 else 0.0
+            prev_time = curr_time
+            draw_fps(frame, fps)
 
-        cv2.imshow("YOLOv11 Detection", frame)
-        if cv2.waitKey(1) & 0xFF == ord("q"):
-            break
-
-    cap.release()
-    cv2.destroyAllWindows()
+            cv2.imshow("YOLOv11 Detection", frame)
+            if cv2.waitKey(1) & 0xFF == ord("q"):
+                break
+    finally:
+        cap.release()
+        cv2.destroyAllWindows()
 
 
 if __name__ == "__main__":
