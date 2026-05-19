@@ -22,3 +22,29 @@ def draw_fps(frame: np.ndarray, fps: float) -> np.ndarray:
         2,
     )
     return frame
+
+
+def draw_detections(
+    frame: np.ndarray,
+    boxes_xyxy: np.ndarray,
+    class_ids: np.ndarray,
+    confidences: np.ndarray,
+    names: dict,
+    threshold: float = 0.5,
+) -> np.ndarray:
+    for box, class_id, conf in zip(boxes_xyxy, class_ids, confidences):
+        if conf < threshold:
+            continue
+        x1, y1, x2, y2 = map(int, box)
+        label = format_label(names[int(class_id)], conf)
+        cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+        cv2.putText(
+            frame,
+            label,
+            (x1, max(y1 - 10, 10)),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.5,
+            (0, 255, 0),
+            2,
+        )
+    return frame
